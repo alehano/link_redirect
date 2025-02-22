@@ -12,13 +12,11 @@ import (
 
 // Config structure to hold the URLs
 type Config struct {
-	URLs []struct {
-		URL      string `yaml:"url"`
-		Redirect string `yaml:"redirect"`
-	} `yaml:"urls"`
+	URLs map[string]string `yaml:"urls"`
 }
 
 var config Config
+var debug = os.Getenv("DEBUG")
 var port = os.Getenv("PORT")
 var configFile = os.Getenv("CONFIG_FILE")
 var reloadInterval = os.Getenv("RELOAD_INTERVAL")
@@ -46,6 +44,11 @@ func main() {
 	err := configor.New(&configor.Config{
 		AutoReload:         true,
 		AutoReloadInterval: reloadIntervalDuration,
+		AutoReloadCallback: func(config interface{}) {
+			if debug == "true" {
+				log.Printf("Config reloaded: %+v", config)
+			}
+		},
 	}).Load(&config, configFile)
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
@@ -57,16 +60,15 @@ func main() {
 	// Define the redirect handler
 	r.Get("/{link}", func(w http.ResponseWriter, r *http.Request) {
 		link := chi.URLParam(r, "link")
-		for _, u := range config.URLs {
-			if u.URL == link {
-				http.Redirect(w, r, u.Redirect, http.StatusFound)
-				return
-			}
+		if redirect, found := config.URLs[link]; found {
+			http.Redirect(w, r, redirect, http.StatusFound)
+			return
 		}
 		http.NotFound(w, r)
 	})
 
 	// Start the server
 	log.Printf("Starting server on :%s", port)
+	log.Printf("Reload interval: %s", reloadIntervalDuration)
 	http.ListenAndServe(":"+port, r)
 }

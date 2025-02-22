@@ -34,10 +34,8 @@ This is a simple Go-based service that redirects incoming links based on a confi
 
    ```yaml
    urls:
-     - url: link1
-       redirect: https://example.com/123
-     - url: link2
-       redirect: https://example.com/456
+     link1: https://example.com/123
+     link2: https://example.com/456
    ```
 
 4. **Run the application:**
@@ -53,7 +51,7 @@ This is a simple Go-based service that redirects incoming links based on a confi
 
 ## Configuration
 
-- The `config.yml` file contains the URLs and their corresponding redirection targets.
+- The `config.yml` file contains a map of URLs and their corresponding redirection targets.
 - The configuration is reloaded every 10 seconds, allowing for dynamic updates without restarting the server.
 - You can customize the server behavior using the following environment variables:
   - `PORT`: The port on which the server listens. Defaults to `8080`.
@@ -62,4 +60,4 @@ This is a simple Go-based service that redirects incoming links based on a confi
 
 ## Notes
 
-- Ensure that the `config.yml`
+- Ensure that the `config.yml` file is correctly formatted and that the URLs are valid.

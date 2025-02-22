@@ -1,5 +1,3 @@
 urls:
-  - url: link1
-    redirect: https://example.com/123
-  - url: link2
-    redirect: https://example.com/456
+  link1: https://example.com/123
+  link2: https://example.com/456
