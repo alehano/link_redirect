@@ -10,7 +10,7 @@ This is a simple Go-based service that redirects incoming links based on a confi
 
 ## Requirements
 
-- Go 1.16 or later
+- Go 1.22 or later
 - `github.com/go-chi/chi/v5` for server routing
 - `github.com/jinzhu/configor` for dynamic configuration
 
@@ -55,12 +55,11 @@ This is a simple Go-based service that redirects incoming links based on a confi
 
 - The `config.yml` file contains the URLs and their corresponding redirection targets.
 - The configuration is reloaded every 10 seconds, allowing for dynamic updates without restarting the server.
+- You can customize the server behavior using the following environment variables:
+  - `PORT`: The port on which the server listens. Defaults to `8080`.
+  - `CONFIG_FILE`: The path to the configuration file. Defaults to `config.yml`.
+  - `RELOAD_INTERVAL`: The interval for reloading the configuration file. Defaults to `10s`.
 
 ## Notes
 
-- Ensure that the `config.yml` file is in the same directory as `main.go`.
-- The service listens on port 8080 by default.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- Ensure that the `config.yml`
