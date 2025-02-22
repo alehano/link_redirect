@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -18,13 +19,30 @@ type Config struct {
 }
 
 var config Config
+var configFile = os.Getenv("CONFIG_FILE")
+var reloadInterval = os.Getenv("RELOAD_INTERVAL")
+var reloadIntervalDuration time.Duration
+
+func init() {
+	if configFile == "" {
+		log.Fatal("CONFIG_FILE environment variable is not set")
+	}
+	if reloadInterval == "" {
+		reloadInterval = "10s"
+	}
+	ri, err := time.ParseDuration(reloadInterval)
+	if err != nil {
+		log.Fatalf("Failed to parse RELOAD_INTERVAL: %v", err)
+	}
+	reloadIntervalDuration = ri
+}
 
 func main() {
 	// Load configuration with auto-reload enabled
 	err := configor.New(&configor.Config{
 		AutoReload:         true,
-		AutoReloadInterval: 10 * time.Second,
-	}).Load(&config, "config.yml")
+		AutoReloadInterval: reloadIntervalDuration,
+	}).Load(&config, configFile)
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
