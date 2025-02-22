@@ -25,7 +25,7 @@ var reloadIntervalDuration time.Duration
 
 func init() {
 	if configFile == "" {
-		log.Fatal("CONFIG_FILE environment variable is not set")
+		configFile = "config.yml"
 	}
 	if reloadInterval == "" {
 		reloadInterval = "10s"
