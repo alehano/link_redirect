@@ -19,11 +19,15 @@ type Config struct {
 }
 
 var config Config
+var port = os.Getenv("PORT")
 var configFile = os.Getenv("CONFIG_FILE")
 var reloadInterval = os.Getenv("RELOAD_INTERVAL")
 var reloadIntervalDuration time.Duration
 
 func init() {
+	if port == "" {
+		port = "8080"
+	}
 	if configFile == "" {
 		configFile = "config.yml"
 	}
@@ -63,6 +67,6 @@ func main() {
 	})
 
 	// Start the server
-	log.Println("Starting server on :8080")
-	http.ListenAndServe(":8080", r)
+	log.Printf("Starting server on :%s", port)
+	http.ListenAndServe(":"+port, r)
 }
