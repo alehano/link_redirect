@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"sync"
 
+	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"gopkg.in/yaml.v2"
 )
@@ -85,6 +86,8 @@ func main() {
 
 	// Set up the router
 	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
 
 	// Define the redirect handler
 	r.Get("/{link}", func(w http.ResponseWriter, r *http.Request) {
