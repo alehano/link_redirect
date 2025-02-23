@@ -6,21 +6,23 @@ import (
 	"os"
 	"time"
 
+	"io/ioutil"
+	"sync"
+
 	"github.com/go-chi/chi/v5"
-	"github.com/jinzhu/configor"
+	"gopkg.in/yaml.v2"
 )
 
-// Config structure to hold the URLs
-type Config struct {
+var config = struct {
 	URLs map[string]string `yaml:"urls"`
-}
+}{}
 
-var config Config
 var debug = os.Getenv("DEBUG")
 var port = os.Getenv("PORT")
 var configFile = os.Getenv("CONFIG_FILE")
 var reloadInterval = os.Getenv("RELOAD_INTERVAL")
 var reloadIntervalDuration time.Duration
+var configMutex sync.Mutex
 
 func init() {
 	if port == "" {
@@ -39,20 +41,47 @@ func init() {
 	reloadIntervalDuration = ri
 }
 
-func main() {
-	// Load configuration with auto-reload enabled
-	err := configor.New(&configor.Config{
-		AutoReload:         true,
-		AutoReloadInterval: reloadIntervalDuration,
-		AutoReloadCallback: func(config interface{}) {
-			if debug == "true" {
+func loadConfig() error {
+	configMutex.Lock()
+	defer configMutex.Unlock()
+
+	// Clear the existing configuration
+	config.URLs = make(map[string]string)
+
+	data, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		return err
+	}
+
+	if err := yaml.Unmarshal(data, &config); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func startConfigReloader() {
+	ticker := time.NewTicker(reloadIntervalDuration)
+	go func() {
+		for range ticker.C {
+			if err := loadConfig(); err != nil {
+				log.Printf("Failed to reload config: %v", err)
+			} else if debug == "true" {
 				log.Printf("Config reloaded: %+v", config)
 			}
-		},
-	}).Load(&config, configFile)
+		}
+	}()
+}
+
+func main() {
+	// Load initial configuration
+	err := loadConfig()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
+
+	// Start the configuration reloader
+	startConfigReloader()
 
 	// Set up the router
 	r := chi.NewRouter()
@@ -60,7 +89,10 @@ func main() {
 	// Define the redirect handler
 	r.Get("/{link}", func(w http.ResponseWriter, r *http.Request) {
 		link := chi.URLParam(r, "link")
-		if redirect, found := config.URLs[link]; found {
+		configMutex.Lock()
+		redirect, found := config.URLs[link]
+		configMutex.Unlock()
+		if found {
 			http.Redirect(w, r, redirect, http.StatusFound)
 			return
 		}
